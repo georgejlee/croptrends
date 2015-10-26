@@ -53,4 +53,4 @@ I would like to improve the crop visualization, perhaps by displaying the top cr
 
 # Installation
 
-Install Django and put this into your Django directory. It has been tested with Django 1.4 and 1.8 with Python 2.7.
+Install Django and put this into your Django directory. You will need to update a few strings in settings.py to have the correct path and site key. You will also need to update cropmap.js with your Google Maps API key. It has been tested with Django 1.4 and 1.8 with Python 2.7.
