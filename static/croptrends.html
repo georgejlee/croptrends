@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="browserApp">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Local Crop Trends</title>
+  <style type="text/css">
+    html, body {
+      height: 100%;
+      width: 100%;
+    }
+
+    .angular-google-map {
+      height: 100%;
+    }
+
+    .angular-google-map-container {
+      height: 100%;
+      width: 100%;
+    }
+
+    .angular-charts-template .ac-chart {
+      width: 100% !important;
+    }
+
+    .chart {
+      height: 150px;
+      width: 100%;
+      text-align: center;
+    }
+
+    #price-chart {
+      width: 100%;
+      height: 200px;
+    }
+
+    #acreage-chart {
+      width: 100%;
+      height: 200px;
+    }
+
+    .top-crop-chart {
+      height: 150px;
+      width: 100%;
+    }
+
+    .full-height {
+      height: 100%
+    }
+
+    #map-pane {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .navbar.top-nav {
+      margin-bottom: 0
+    }
+
+    g > text {
+      font-size: 14px
+    }
+
+    #data-pane {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    #data-pane .panel-heading, #data-pane .panel-primary {
+      border-radius: 0;
+      border: none;
+    }
+
+    #data-pane .panel-group .panel + .panel, #data-pane .panel-group {
+      margin-top: 1px;
+    }
+
+    #data-pane .alert {
+      margin: 15px;
+    }
+
+    @media screen and (max-width: 767px) {
+      g > text {
+        font-size: 11px
+      }
+
+      #map-pane {
+        height: 200px;
+      }
+    }
+
+    @media screen and (min-width: 768px) {
+      #map-pane {
+        position: absolute;
+        top: 60px;
+        bottom: 0;
+      }
+
+      #data-pane {
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+        overflow-y: scroll;
+        position: absolute;
+        top: 59px;
+        right: 0;
+        bottom: 0;
+      }
+    }
+
+    .navbar-geo-button {
+      padding-left: 15px;
+      padding-right: 15px;
+    }
+
+    [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+      display: none !important;
+    }
+  </style>
+</head>
+<body ng-controller="cropBrowserCtrl">
+
+<link rel="stylesheet" href="css/bootstrap.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.2/angular.min.js"></script>
+<script src="js/lodash.min.js"></script>
+<script src="js/angular-simple-logger.min.js"></script>
+<script src="js/angular-google-maps.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+<script src="js/angular-charts.js"></script>
+
+<script src="js/cropmap.js"></script>
+
+<div class="container-fluid full-height">
+  <div class="row">
+    <nav class="navbar navbar-inverse navbar-static-top top-nav">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="navbar-header">
+            <h4 class="navbar-text navbar-left navbar-title">
+              <a href="#" class="navbar-link navbar-geo-button" ng-click="geolocate()"><i
+                      class="fa fa-lg fa-crosshairs"></i></a>
+              FarmPlenty Local Crop Trends
+            </h4>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </div>
+  <div class="row" ng-cloak>
+    <div class="col-sm-4" id="map-pane">
+      <ui-gmap-google-map
+              center="map.center"
+              pan="map.pan"
+              zoom="map.zoom"
+              options="map.options"
+              events="map.events">
+        <ui-gmap-marker
+                idKey="marker.idKey"
+                coords="marker.coords"
+                options="marker.options">
+        </ui-gmap-marker>
+        <ui-gmap-circle
+                center="circle.center"
+                radius="circle.radius"
+                fill="circle.fill"
+                stroke="circle.stroke"
+                clickable="false"
+                draggable="false"
+                editable="false"
+                visible="true">
+        </ui-gmap-circle>
+      </ui-gmap-google-map>
+    </div>
+    <div class="modal fade" id="progress-modal" data-backdrop="static" data-keyboard="false" ng-cloak>
+      <div class="modal-dialog modal-sm">
+        <div class="modal-content text-center">
+          <div class="modal-header">
+            <h4 class="modal-title">Loading Crop Data...</h4>
+          </div>
+          <div class="modal-body">
+            <i class="fa fa-spinner fa-pulse fa-2x"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="geo-modal" data-backdrop="static" data-keyboard="false" ng-cloak>
+      <div class="modal-dialog modal-sm">
+        <div class="modal-content text-center">
+          <div class="modal-header">
+            <h4 class="modal-title">Getting your location...</h4>
+          </div>
+          <div class="modal-body">
+            <i class="fa fa-spinner fa-pulse fa-2x"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-8" id="data-pane">
+      <div class="alert alert-warning" ng-show="noData">
+        <p>We did not find any crops in the region you selected. Please select a different region on the map.</p>
+      </div>
+      <div class="alert alert-warning alert-dismissable" ng-show="noGeo">
+        <button type="button" class="close" ng-click="noGeo = false">×</button>
+        <p>We could not get your current location. Please select a region using the map.</p>
+      </div>
+      <div class="panel-group" ng-show="!noData">
+        <div class="panel panel-primary">
+          <div class="panel-heading" role="tab" id="top-crops-heading">
+            <h3 class="panel-title">
+              <a role="button" data-toggle="collapse" href="#collapse-top-crops"
+                 aria-expanded="true" aria-controls="collapse-top-crops">
+                Top crops</a>
+            </h3>
+          </div>
+          <div id="collapse-top-crops" class="panel-collapse collapse in" role="tabpanel"
+               aria-labelledby="top-crops-heading">
+            <div class="panel-body">
+              <div ac-chart="chartType" ac-data="topCropChartData" ac-config="topCropChartConfig"
+                   id='top-crop-chart' class='chart top-crop-chart'></div>
+            </div>
+          </div>
+        </div>
+        <div class="panel panel-primary">
+          <div class="panel-heading" role="tab" id="trends-heading">
+            <h3 class="panel-title">
+              <a role="button" data-toggle="collapse" href="#collapse-trends"
+                 aria-expanded="true" aria-controls="collapse-trends">
+                Five-year trends
+              </a>
+            </h3>
+          </div>
+          <div id="collapse-trends" class="panel-collapse collapse in" role="tabpanel"
+               aria-labelledby="trends-heading">
+            <div class="panel-body">
+              <div class="col-sm-6 col-lg-3 center-block" ng-repeat="chart in topTrendsCharts">
+                <div ac-chart="chart.chartType" ac-data="chart.chartData" ac-config="chart.chartConfig"
+                     class='chart center-block'></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel panel-primary">
+          <div class="panel-heading" role="tab" id="details-heading">
+            <h3 class="panel-title">
+              <a role="button" data-toggle="collapse" href="#collapse-details"
+                 aria-expanded="true" aria-controls="collapse-details">
+                Crop details
+              </a>
+            </h3>
+          </div>
+          <div id="collapse-details" class="panel-collapse collapse in" role="tabpanel"
+               aria-labelledby="details-heading">
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-sm-12">
+                  <ul class="nav nav-pills text-center">
+                    <li class="h4{{ crop.x == selectedCrop ? ' active' : '' }}"
+                        ng-repeat="crop in topCropChartData.data">
+                      <a href="#" ng-click="updateSelectedCrop(crop.x)">
+                        {{ crop.x }}
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-sm-5 col-sm-push-7 col-md-4 col-md-push-8 text-center">
+                  <div ac-chart="'line'"
+                       ac-data="acreageChartData"
+                       ac-config="acreageChartConfig"
+                       id='acreage-chart'
+                       class='chart center-block'></div>
+                </div>
+                <div class="col-sm-7 col-sm-pull-5 col-md-8 col-md-pull-4 text-center">
+                  <div ac-chart="'line'"
+                       ac-data="priceChartData"
+                       ac-config="priceChartConfig"
+                       id='price-chart'
+                       class='chart center-block'></div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-sm-12">
+                  &nbsp;
+                  <div class="panel panel-default" ng-show="priceTable.length > 0">
+                    <table class="table table-striped table-hover">
+                      <tr>
+                        <th>Crop class</th>
+                        <th>Utilization Practice</th>
+                        <th class="text-right">Price</th>
+                      </tr>
+                      <tr ng-repeat="price in priceTable"
+                          ng-class="{info: $index == priceTableIndex}"
+                          ng-click="updatePricesForUtilPractice($index)">
+                        <td>{{ price.variety }}</td>
+                        <td>{{ price.utilPractice }}</td>
+                        <td class="text-right">${{ price.lastPrice }} / {{ price.unit }} </td>
+                      </tr>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
