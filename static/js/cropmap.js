@@ -2,7 +2,7 @@ var browserApp = angular.module('browserApp', ['uiGmapgoogle-maps', 'angularChar
     .config(function (uiGmapGoogleMapApiProvider) {
         uiGmapGoogleMapApiProvider.configure({
             v: '3.22',
-            key: 'AIzaSyBVf8Y8-qPxiRGX3HfOTzWK0hIp7rAJ2ZA'
+            key: '<YOUR GOOGLE MAPS KEY>'
         });
     });
 
