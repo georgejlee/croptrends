@@ -295,7 +295,8 @@ def crops_in_circle_helper(lat, lon, radius, location):
           full_variety = variety.capitalize()
         last_price = make_price_string(annual_prices[max(annual_prices.keys())])
         price_string = make_price_string(annual_prices[CROP_YEARS[-1]])
-        price_delta = make_price_delta_string(annual_prices[CROP_YEARS[0]], annual_prices[CROP_YEARS[-1]])
+        old_price = annual_prices[CROP_YEARS[0]]
+        price_delta = make_price_delta_string(old_price, annual_prices[CROP_YEARS[-1]])
 
         price_history_list.append({
           "shortCrop": short_crop(name),
@@ -307,7 +308,7 @@ def crops_in_circle_helper(lat, lon, radius, location):
           "price": price_string,
           "lastPrice": last_price,
           "priceDelta": price_delta,
-          "priceDeltaPct": float(price_delta) / float(price_string) if float(price_string) > 0 else 0.0,
+          "priceDeltaPct": float(price_delta) / float(old_price) if float(old_price) > 0 else 0.0,
           "annualPrices": {int(key): float(value) for (key, value) in annual_prices.iteritems() if float(value) > 0}
         })
 
