@@ -111,6 +111,21 @@
       padding-right: 15px;
     }
 
+    #navbar-info-button {
+      padding-left: 15px;
+      padding-right: 30px;
+    }
+
+    #title-text {
+      color: white;
+    }
+
+    #title-text:hover,#title-text:focus {
+      color:#2c3e50;
+      background-color:transparent;
+      text-decoration:none;
+    }
+
     [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
       display: none !important;
     }
@@ -140,7 +155,9 @@
             <h4 class="navbar-text navbar-left navbar-title">
               <a href="#" class="navbar-link navbar-geo-button" ng-click="geolocate()"><i
                       class="fa fa-lg fa-crosshairs"></i></a>
-              FarmPlenty Local Crop Trends
+              <a href="http://devpost.com/software/farmplenty-local-crop-trends" target="_blank" id="title-text">
+                FarmPlenty Local Crop Trends
+              </a>
             </h4>
           </div>
         </div>
